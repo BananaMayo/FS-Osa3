@@ -12,29 +12,19 @@ const Person = require("./models/person")
 const mongoose = require('mongoose')
 
 
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
 
-let persons = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456"
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "39-44-5323523"
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "12-43-234345"
-  },
-  {
-    id: 4,
-    name: "Mary Poppendick",
-    number: "39-23-6423122"
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
   }
-]
+
+  next(error)
+}
+
+// tämä tulee kaikkien muiden middlewarejen rekisteröinnin jälkeen!
+app.use(errorHandler)
+
 
 /* GET-Osio
  */
@@ -45,7 +35,7 @@ app.get('/', (req, res) => {
 
 app.get('/info', (req, res) => {
   res.send(`Phonebook has info for ${persons.length} people <br> <p> ${Date()} </p>`)
-  
+
 })
 
 app.get('/api/persons', (req, res) => {
@@ -66,11 +56,12 @@ app.get('/api/persons/:id', (request, response) => {
   }
 })
 
-app.delete('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  persons = persons.filter(person => person.id !== id)
-
-  response.status(204).end()
+app.delete('/api/persons/:id', (request, response, next) => {
+  Person.findByIdAndRemove(request.params.id)
+    .then(result => {
+      response.status(204).end()
+    })
+    .catch(error => next(error))
 })
 
 
