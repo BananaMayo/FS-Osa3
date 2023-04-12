@@ -8,6 +8,9 @@ var morgan = require('morgan')
 morgan.token('person', function (req, res) { return JSON.stringify(req.body)})
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :person'))
 
+const Person = require("./models/person")
+
+
 
 let persons = [
   {
@@ -45,7 +48,9 @@ app.get('/info', (req, res) => {
 })
 
 app.get('/api/persons', (req, res) => {
-  res.json(persons)
+  Person.find({}).then(variable => {
+    res.json(variable)
+  })
 })
 
 app.get('/api/persons/:id', (request, response) => {
