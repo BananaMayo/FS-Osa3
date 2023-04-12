@@ -9,6 +9,7 @@ morgan.token('person', function (req, res) { return JSON.stringify(req.body)})
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :person'))
 
 const Person = require("./models/person")
+const mongoose = require('mongoose')
 
 
 
@@ -85,27 +86,37 @@ app.post('/api/persons', (request, response) => {
     })
   }
 
-  if(persons.filter(person => person.name.toLowerCase() === body.name.toLowerCase()).length>0){
-    return response.status(400).json({ 
-      error: 'name must be unique'
-    })
-  }
-
   if (!body.number) {
     return response.status(400).json({ 
       error: 'number missing' 
     })
   }
 
+  const person = new Person({
+      name: body.name,
+      number: body.number
+  })
 
-  const person = {
-    id: Math.floor(Math.random() * 10000),
-    name: body.name,
-    number: body.number
-  }
+  person.save().then(result => {
+    console.log("Phonenumber saved")
+  })
 
-  persons = persons.concat(person)
   response.json(person)
+
+  // if(persons.filter(person => person.name.toLowerCase() === body.name.toLowerCase()).length>0){
+  //   return response.status(400).json({ 
+  //     error: 'name must be unique'
+  //   })
+  // }
+
+
+  // const person = {
+  //   id: Math.floor(Math.random() * 10000),
+  //   name: body.name,
+  //   number: body.number
+  // }
+
+  // persons = persons.concat(person)
 })
 
 const PORT = 3001
