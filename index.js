@@ -5,12 +5,10 @@ const cors = require('cors')
 app.use(cors())
 app.use(express.static('build'))
 var morgan = require('morgan')
-morgan.token('person', function (req, res) { return JSON.stringify(req.body)})
+morgan.token('person', function (req) { return JSON.stringify(req.body)})
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :person'))
 
-const Person = require("./models/person")
-const mongoose = require('mongoose')
-
+const Person = require('./models/person')
 
 const errorHandler = (error, request, response, next) => {
   console.error(error.message)
@@ -34,8 +32,8 @@ app.get('/', (req, res) => {
 })
 
 app.get('/info', (req, res) => {
-  res.send(`Phonebook has info for ${persons.length} people <br> <p> ${Date()} </p>`)
-
+  Person.find({}).then(variable => {
+    res.send(`Phonebook has info for ${variable.length} people <br> <p> ${Date()} </p>`)})
 })
 
 app.get('/api/persons', (req, res) => {
@@ -45,20 +43,14 @@ app.get('/api/persons', (req, res) => {
 })
 
 app.get('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  const person = persons.find(person => person.id === id)
-  response.json(person)
-
-  if (person) {
-    response.json(person)
-  } else {
-    response.status(404).end()
-  }
+  Person.find({ _id:request.params.id }).then(x => {
+    response.json(x)
+  })
 })
 
 app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
-    .then(result => {
+    .then(() => {
       response.status(204).end()
     })
     .catch(error => next(error))
@@ -72,30 +64,30 @@ app.post('/api/persons', (request, response) => {
   const body = request.body
 
   if (!body.name) {
-    return response.status(400).json({ 
-      error: 'name missing' 
+    return response.status(400).json({
+      error: 'name missing'
     })
   }
 
   if (!body.number) {
-    return response.status(400).json({ 
-      error: 'number missing' 
+    return response.status(400).json({
+      error: 'number missing'
     })
   }
 
   const person = new Person({
-      name: body.name,
-      number: body.number
+    name: body.name,
+    number: body.number
   })
 
-  person.save().then(result => {
-    console.log("Phonenumber saved")
+  person.save().then(() => {
+    console.log('Phonenumber saved')
   })
 
   response.json(person)
 
   // if(persons.filter(person => person.name.toLowerCase() === body.name.toLowerCase()).length>0){
-  //   return response.status(400).json({ 
+  //   return response.status(400).json({
   //     error: 'name must be unique'
   //   })
   // }
